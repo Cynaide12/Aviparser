@@ -8,3 +8,9 @@ type Apartment struct {
 	Type string `json:"type"`
 	AvialableDates map[string][]string `json:"avialabledates"`
 }
+
+type ChangetApartments struct{
+	NewPrices []Apartment
+	NewAvialableDates []Apartment
+	NewApartments []Apartment
+}

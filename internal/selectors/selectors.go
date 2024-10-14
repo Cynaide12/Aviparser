@@ -2,6 +2,7 @@ package selectors
 
 const Price = "*[data-marker='item-view/item-price']"
 const Description = "*[data-marker='item-view/item-description']"
+const AllCount = ".page-title-count-wQ7pG"
 const ApartmentType = ".breadcrumbs-linkWrapper-jZP0j span"
 const Title = ".style-titleWrapper-Hmr_5 h1"
 const MonthName = ".styles-module-title_month-Ik8nn"
