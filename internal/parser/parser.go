@@ -107,6 +107,7 @@ func StartParse(ctx context.Context, AviBot bot.AviBot, cancel, acancel context.
 			apartments = append(apartments, *apartment)
 		}
 		fmt.Printf("\n ЗАКОНЧИЛ С %d КВАРТИРОЙ", i + 1)
+		time.Sleep(1 * time.Second)
 
 	}
 

@@ -54,29 +54,27 @@ func createExcelFile() {
     if err != nil {
         log.Fatalf("Ошибка чтения JSON: %v", err)
     }
-	
-	sortApartments(apartments)
+    
+    sortApartments(apartments)
 
-	fmt.Print(parser.FormatAvailableDates(apartments[0].AvialableDates))
+    fmt.Print(parser.FormatAvailableDates(apartments[0].AvialableDates))
 
     f := excelize.NewFile()
 
-    headers := []string{"Название", "Ссылка", "Тип квартиры"}
-    for i, header := range headers {
-        col := getExcelColumn(i)
-        cell := fmt.Sprintf("%s1", col)
-        f.SetCellValue("Sheet1", cell, header)
-    }
-
+    // Заголовки столбцов
+    f.SetCellValue("Sheet1", "A1", "Название")
     months := []string{"Октябрь", "Ноябрь"}
+
+    colOffset := 1 // Столбец для календаря начинается с индекса 1 (т.е. B)
     
-    colOffset := 3 
+    // Устанавливаем заголовки для месяцев
     for _, month := range months {
         monthStartCol := getExcelColumn(colOffset)
         monthEndCol := getExcelColumn(colOffset + 30)
         f.MergeCell("Sheet1", fmt.Sprintf("%s1", monthStartCol), fmt.Sprintf("%s1", monthEndCol))
         f.SetCellValue("Sheet1", fmt.Sprintf("%s1", monthStartCol), month)
 
+        // Добавляем дни в заголовки
         for day := 1; day <= 31; day++ {
             col := getExcelColumn(colOffset + day - 1)
             cell := fmt.Sprintf("%s2", col)
@@ -86,20 +84,24 @@ func createExcelFile() {
         colOffset += 31
     }
 
+    // Добавляем столбец "Ссылка" после календаря
+    f.SetCellValue("Sheet1", fmt.Sprintf("%s1", getExcelColumn(colOffset)), "Ссылка")
+
+    // Добавляем данные о квартирах
     for i, apartment := range apartments {
         row := i + 3
 
+        // Заполняем данные о квартире
         f.SetCellValue("Sheet1", fmt.Sprintf("A%d", row), apartment.Title)
-        f.SetCellValue("Sheet1", fmt.Sprintf("B%d", row), apartment.Link)
-        f.SetCellValue("Sheet1", fmt.Sprintf("C%d", row), apartment.Type)
 
-        colOffset := 3 
+        colOffset := 1 // Стартовый столбец для календаря (B)
         for _, month := range months {
             for day := 1; day <= 31; day++ {
                 dayStr := fmt.Sprintf("%d", day)
                 col := getExcelColumn(colOffset + day - 1)
                 cell := fmt.Sprintf("%s%d", col, row)
 
+                // Заполняем цену для свободных дат, если доступно
                 if contains(apartment.AvialableDates[month], dayStr) {
                     f.SetCellValue("Sheet1", cell, apartment.Price)
                 } else {
@@ -111,17 +113,26 @@ func createExcelFile() {
 
             colOffset += 31
         }
-    }
-	
-	f.SetColWidth("Sheet1", "A", "A", 30)
-	f.SetColWidth("Sheet1", "B", "B", 50)
-	f.SetColWidth("Sheet1", "C", "C", 20)
 
+        // Добавляем ссылку на квартиру после календаря
+        f.SetCellValue("Sheet1", fmt.Sprintf("%s%d", getExcelColumn(colOffset), row), apartment.Link)
+    }
+    
+    // Устанавливаем ширину столбцов
+    f.SetColWidth("Sheet1", "A", "A", 30)   // Ширина для названия
+    f.SetColWidth("Sheet1", "B", "BK", 5)   // Ширина для календаря (можно отрегулировать, если нужно)
+    f.SetColWidth("Sheet1", getExcelColumn(colOffset), getExcelColumn(colOffset), 5) // Ширина для ссылки
+
+    // Автоматическое вычисление ширины для столбцов календаря
+    for col := 1; col <= (colOffset-1); col++ {
+        f.AutoFilter("Sheet1", getExcelColumn(col), fmt.Sprintf("%s%d", getExcelColumn(col), len(apartments)+2), "")
+    }
+
+    // Сохранение файла
     if err := f.SaveAs("apartments.xlsx"); err != nil {
         fmt.Println(err)
         os.Exit(1)
     }
-
 
 }
 
